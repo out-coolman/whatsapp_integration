@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sales Dashboard Design System - Light Blue & White Theme */
+
+@layer base {
+  :root {
+    /* Background and surfaces */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 27%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 210 17% 99%;
+
+    /* Card system */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+    --card-shadow: 210 15% 85%;
+
+    /* Popover system */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Primary system - Light Blue */
+    --primary: 201 96% 62%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 201 96% 55%;
+    --primary-soft: 201 96% 95%;
+    --primary-border: 201 96% 88%;
+
+    /* Secondary system - Soft Gray */
+    --secondary: 210 17% 95%;
+    --secondary-foreground: 215 25% 27%;
+    --secondary-hover: 210 17% 90%;
+
+    /* Muted system */
+    --muted: 210 17% 95%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent system - Teal */
+    --accent: 174 62% 47%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 174 62% 95%;
+
+    /* Status colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 142 71% 95%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 38 92% 95%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 0 84% 95%;
+
+    /* Borders and inputs */
+    --border: 210 17% 89%;
+    --border-hover: 210 17% 82%;
+    --input: 210 17% 89%;
+    --ring: 201 96% 62%;
+
+    /* Lead status colors */
+    --hot: 0 84% 60%;
+    --warm: 38 92% 50%;
+    --cold: 201 96% 62%;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(210 15% 85% / 0.05);
+    --shadow: 0 1px 3px 0 hsl(210 15% 85% / 0.1), 0 1px 2px -1px hsl(210 15% 85% / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(210 15% 85% / 0.1), 0 2px 4px -2px hsl(210 15% 85% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(210 15% 85% / 0.1), 0 4px 6px -4px hsl(210 15% 85% / 0.1);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
