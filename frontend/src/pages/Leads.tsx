@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  Eye, 
-  Edit, 
-  Phone, 
+import { useQuery } from "@tanstack/react-query";
+import {
+  Search,
+  Filter,
+  Plus,
+  Eye,
+  Edit,
+  Phone,
   MessageCircle,
   MoreHorizontal
 } from "lucide-react";
@@ -35,73 +36,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { leadsService, Lead } from "@/services/leads";
 
-const mockLeads = [
-  {
-    id: 1,
-    name: "Maria Silva",
-    city: "São Paulo",
-    whatsapp: "(11) 99999-9999",
-    stage: "Qualified",
-    status: "hot",
-    assignedCloser: "João Santos",
-    lastContact: "2024-01-15",
-    nextAction: "Schedule call",
-  },
-  {
-    id: 2,
-    name: "Carlos Oliveira",
-    city: "Rio de Janeiro",
-    whatsapp: "(21) 98888-8888",
-    stage: "Contacted",
-    status: "warm",
-    assignedCloser: "Ana Costa",
-    lastContact: "2024-01-14",
-    nextAction: "Send proposal",
-  },
-  {
-    id: 3,
-    name: "Fernanda Lima",
-    city: "Belo Horizonte",
-    whatsapp: "(31) 97777-7777",
-    stage: "Proposed",
-    status: "hot",
-    assignedCloser: "Pedro Alves",
-    lastContact: "2024-01-13",
-    nextAction: "Follow up",
-  },
-  {
-    id: 4,
-    name: "Roberto Santos",
-    city: "Brasília",
-    whatsapp: "(61) 96666-6666",
-    stage: "New",
-    status: "cold",
-    assignedCloser: "Lucia Mendes",
-    lastContact: "2024-01-12",
-    nextAction: "First contact",
-  },
-  {
-    id: 5,
-    name: "Julia Ferreira",
-    city: "Curitiba",
-    whatsapp: "(41) 95555-5555",
-    stage: "Booked",
-    status: "hot",
-    assignedCloser: "João Santos",
-    lastContact: "2024-01-11",
-    nextAction: "Confirm appointment",
-  },
-];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
+const getStatusColor = (classification: string) => {
+  switch (classification) {
     case "hot":
-      return "bg-hot text-white";
+      return "bg-red-100 text-red-800";
     case "warm":
-      return "bg-warm text-white";
+      return "bg-yellow-100 text-yellow-800";
     case "cold":
-      return "bg-cold text-white";
+      return "bg-blue-100 text-blue-800";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -109,17 +53,17 @@ const getStatusColor = (status: string) => {
 
 const getStageColor = (stage: string) => {
   switch (stage) {
-    case "New":
+    case "new":
       return "bg-muted text-muted-foreground";
-    case "Contacted":
+    case "contacted":
       return "bg-blue-100 text-blue-800";
-    case "Qualified":
+    case "qualified":
       return "bg-primary-soft text-primary";
-    case "Proposed":
+    case "proposed":
       return "bg-accent-soft text-accent";
-    case "Booked":
+    case "booked":
       return "bg-success-soft text-success";
-    case "Confirmed":
+    case "confirmed":
       return "bg-green-100 text-green-800";
     default:
       return "bg-muted text-muted-foreground";
@@ -128,17 +72,22 @@ const getStageColor = (stage: string) => {
 
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [classificationFilter, setClassificationFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
 
-  const filteredLeads = mockLeads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.city.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    const matchesStage = stageFilter === "all" || lead.stage === stageFilter;
-    
-    return matchesSearch && matchesStatus && matchesStage;
+  // Fetch leads data with filters
+  const { data: leadsData, isLoading: leadsLoading } = useQuery({
+    queryKey: ['leads', searchTerm, classificationFilter, stageFilter],
+    queryFn: () => leadsService.getLeadsWithFilters({
+      search: searchTerm || undefined,
+      classification: classificationFilter !== "all" ? classificationFilter : undefined,
+      stage: stageFilter !== "all" ? stageFilter : undefined,
+      limit: 100
+    }),
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  const leads = leadsData || [];
 
   return (
     <div className="space-y-6">
@@ -181,12 +130,12 @@ export default function Leads() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={classificationFilter} onValueChange={setClassificationFilter}>
                   <SelectTrigger className="w-32 rounded-2xl border-border">
-                    <SelectValue placeholder="Status" />
+                    <SelectValue placeholder="Classification" />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl">
-                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="all">All Classifications</SelectItem>
                     <SelectItem value="hot">Hot</SelectItem>
                     <SelectItem value="warm">Warm</SelectItem>
                     <SelectItem value="cold">Cold</SelectItem>
@@ -199,11 +148,12 @@ export default function Leads() {
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl">
                     <SelectItem value="all">All Stages</SelectItem>
-                    <SelectItem value="New">New</SelectItem>
-                    <SelectItem value="Contacted">Contacted</SelectItem>
-                    <SelectItem value="Qualified">Qualified</SelectItem>
-                    <SelectItem value="Proposed">Proposed</SelectItem>
-                    <SelectItem value="Booked">Booked</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="contacted">Contacted</SelectItem>
+                    <SelectItem value="qualified">Qualified</SelectItem>
+                    <SelectItem value="proposed">Proposed</SelectItem>
+                    <SelectItem value="booked">Booked</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -220,7 +170,7 @@ export default function Leads() {
       >
         <Card className="rounded-2xl shadow-card border-border">
           <CardHeader>
-            <CardTitle>Leads ({filteredLeads.length})</CardTitle>
+            <CardTitle>Leads ({leads.length}) {leadsLoading && "(Loading...)"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -228,17 +178,17 @@ export default function Leads() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>City</TableHead>
-                    <TableHead>WhatsApp</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
                     <TableHead>Stage</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Assigned Closer</TableHead>
+                    <TableHead>Classification</TableHead>
+                    <TableHead>Source</TableHead>
                     <TableHead>Last Contact</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLeads.map((lead, index) => (
+                  {leads.map((lead, index) => (
                     <motion.tr
                       key={lead.id}
                       initial={{ opacity: 0, x: -20 }}
@@ -246,32 +196,43 @@ export default function Leads() {
                       transition={{ delay: 0.3 + index * 0.05 }}
                       className="hover:bg-muted/50 transition-colors"
                     >
-                      <TableCell className="font-medium">{lead.name}</TableCell>
-                      <TableCell>{lead.city}</TableCell>
-                      <TableCell>{lead.whatsapp}</TableCell>
+                      <TableCell className="font-medium">{lead.full_name}</TableCell>
+                      <TableCell>{lead.email || "N/A"}</TableCell>
+                      <TableCell className="font-mono text-sm">{lead.phone || "N/A"}</TableCell>
                       <TableCell>
                         <Badge className={`rounded-full ${getStageColor(lead.stage)}`}>
-                          {lead.stage}
+                          {lead.stage.charAt(0).toUpperCase() + lead.stage.slice(1)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`rounded-full ${getStatusColor(lead.status)}`}>
-                          {lead.status.toUpperCase()}
+                        <Badge className={`rounded-full ${getStatusColor(lead.classification)}`}>
+                          {lead.classification.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell>{lead.assignedCloser}</TableCell>
-                      <TableCell>{new Date(lead.lastContact).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <span className="text-sm capitalize">{lead.source.replace('_', ' ')}</span>
+                      </TableCell>
+                      <TableCell>
+                        {lead.last_contacted_at
+                          ? new Date(lead.last_contacted_at).toLocaleDateString()
+                          : "Never"
+                        }
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-secondary">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-secondary">
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-secondary">
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
+                          {lead.phone && (
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-secondary">
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {lead.phone && (
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-secondary">
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                          )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-secondary">
@@ -287,7 +248,7 @@ export default function Leads() {
                                 View Details
                               </DropdownMenuItem>
                               <DropdownMenuItem className="rounded-xl">
-                                Change Status
+                                Change Classification
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

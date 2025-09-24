@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
-import { 
-  TrendingUp, 
-  Users, 
-  Calendar, 
-  Phone, 
-  MessageCircle, 
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  TrendingUp,
+  Users,
+  Calendar,
+  Phone,
+  MessageCircle,
   Clock,
   Target,
   CheckCircle2
@@ -12,74 +14,161 @@ import {
 import { StatsCard } from "@/components/ui/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-
-const kpiData = [
-  {
-    title: "Contact Rate",
-    value: "78.5%",
-    change: { value: "+5.2%", trend: "up" as const },
-    icon: Phone,
-  },
-  {
-    title: "Booking Rate",
-    value: "34.2%",
-    change: { value: "+2.1%", trend: "up" as const },
-    icon: Calendar,
-  },
-  {
-    title: "Show Rate",
-    value: "89.3%",
-    change: { value: "-1.5%", trend: "down" as const },
-    icon: CheckCircle2,
-  },
-  {
-    title: "Avg Handle Time",
-    value: "4.2min",
-    change: { value: "-0.3min", trend: "up" as const },
-    icon: Clock,
-  },
-];
-
-const funnelData = [
-  { stage: "Leads", count: 1250, percentage: 100, color: "bg-blue-500" },
-  { stage: "Contacted", count: 981, percentage: 78.5, color: "bg-blue-600" },
-  { stage: "Qualified", count: 654, percentage: 52.3, color: "bg-primary" },
-  { stage: "Proposed", count: 428, percentage: 34.2, color: "bg-accent" },
-  { stage: "Booked", count: 312, percentage: 25.0, color: "bg-success" },
-  { stage: "Confirmed", count: 279, percentage: 22.3, color: "bg-green-600" },
-];
-
-const statsData = [
-  {
-    category: "Telephony",
-    stats: [
-      { label: "Calls Made", value: "847" },
-      { label: "Calls Answered", value: "623" },
-      { label: "No Answer", value: "178" },
-      { label: "Busy/Failed", value: "46" },
-    ],
-  },
-  {
-    category: "WhatsApp",
-    stats: [
-      { label: "Messages Sent", value: "1,234" },
-      { label: "Delivered", value: "1,198" },
-      { label: "Read", value: "891" },
-      { label: "Avg Response Time", value: "2.4h" },
-    ],
-  },
-  {
-    category: "Operations",
-    stats: [
-      { label: "Human Handoffs", value: "23" },
-      { label: "SLA Compliance", value: "94.2%" },
-      { label: "Escalations", value: "12" },
-      { label: "Resolution Rate", value: "87%" },
-    ],
-  },
-];
+import { metricsService } from "@/services/metrics";
 
 export default function Dashboard() {
+  const { data: overview } = useQuery({
+    queryKey: ['metrics', 'overview'],
+    queryFn: metricsService.getOverview,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const { data: telephonyMetrics } = useQuery({
+    queryKey: ['metrics', 'telephony'],
+    queryFn: metricsService.getTelephonyMetrics,
+    refetchInterval: 30000,
+  });
+
+  const { data: whatsappMetrics } = useQuery({
+    queryKey: ['metrics', 'whatsapp'],
+    queryFn: metricsService.getWhatsAppMetrics,
+    refetchInterval: 30000,
+  });
+
+  // Dynamic KPI data based on API response
+  const kpiData = overview ? [
+    {
+      title: "Contact Rate",
+      value: `${overview.funnel.contact_rate.toFixed(1)}%`,
+      change: { value: "+5.2%", trend: "up" as const },
+      icon: Phone,
+    },
+    {
+      title: "Booking Rate",
+      value: `${overview.funnel.booking_rate.toFixed(1)}%`,
+      change: { value: "+2.1%", trend: "up" as const },
+      icon: Calendar,
+    },
+    {
+      title: "Show Rate",
+      value: `${overview.funnel.show_rate.toFixed(1)}%`,
+      change: { value: "-1.5%", trend: "down" as const },
+      icon: CheckCircle2,
+    },
+    {
+      title: "Avg Handle Time",
+      value: "4.2min", // This would need to be calculated from call data
+      change: { value: "-0.3min", trend: "up" as const },
+      icon: Clock,
+    },
+  ] : [
+    {
+      title: "Contact Rate",
+      value: "...",
+      change: { value: "", trend: "up" as const },
+      icon: Phone,
+    },
+    {
+      title: "Booking Rate",
+      value: "...",
+      change: { value: "", trend: "up" as const },
+      icon: Calendar,
+    },
+    {
+      title: "Show Rate",
+      value: "...",
+      change: { value: "", trend: "down" as const },
+      icon: CheckCircle2,
+    },
+    {
+      title: "Avg Handle Time",
+      value: "...",
+      change: { value: "", trend: "up" as const },
+      icon: Clock,
+    },
+  ];
+
+  // Dynamic funnel data based on API response
+  const funnelData = overview ? [
+    {
+      stage: "New Leads",
+      count: overview.funnel.leads_new,
+      percentage: 100,
+      color: "bg-blue-500"
+    },
+    {
+      stage: "Contacted",
+      count: overview.funnel.leads_contacted,
+      percentage: overview.funnel.leads_new > 0 ? (overview.funnel.leads_contacted / overview.funnel.leads_new) * 100 : 0,
+      color: "bg-blue-600"
+    },
+    {
+      stage: "Qualified",
+      count: overview.funnel.leads_qualified,
+      percentage: overview.funnel.leads_new > 0 ? (overview.funnel.leads_qualified / overview.funnel.leads_new) * 100 : 0,
+      color: "bg-primary"
+    },
+    {
+      stage: "Booked",
+      count: overview.funnel.leads_booked,
+      percentage: overview.funnel.leads_new > 0 ? (overview.funnel.leads_booked / overview.funnel.leads_new) * 100 : 0,
+      color: "bg-success"
+    },
+    {
+      stage: "Showed",
+      count: overview.funnel.leads_showed,
+      percentage: overview.funnel.leads_new > 0 ? (overview.funnel.leads_showed / overview.funnel.leads_new) * 100 : 0,
+      color: "bg-green-600"
+    },
+  ] : [
+    { stage: "New Leads", count: 0, percentage: 0, color: "bg-blue-500" },
+    { stage: "Contacted", count: 0, percentage: 0, color: "bg-blue-600" },
+    { stage: "Qualified", count: 0, percentage: 0, color: "bg-primary" },
+    { stage: "Booked", count: 0, percentage: 0, color: "bg-success" },
+    { stage: "Showed", count: 0, percentage: 0, color: "bg-green-600" },
+  ];
+
+  // Dynamic stats data based on API response
+  const statsData = [
+    {
+      category: "Telephony",
+      stats: telephonyMetrics ? [
+        { label: "Calls Made", value: telephonyMetrics.totals.calls_initiated.toString() },
+        { label: "Calls Answered", value: telephonyMetrics.totals.calls_answered.toString() },
+        { label: "Answer Rate", value: `${telephonyMetrics.totals.answer_rate.toFixed(1)}%` },
+        { label: "Total Cost", value: `$${telephonyMetrics.totals.total_cost_dollars.toFixed(2)}` },
+      ] : [
+        { label: "Calls Made", value: "..." },
+        { label: "Calls Answered", value: "..." },
+        { label: "Answer Rate", value: "..." },
+        { label: "Total Cost", value: "..." },
+      ],
+    },
+    {
+      category: "WhatsApp",
+      stats: whatsappMetrics ? [
+        { label: "Messages Sent", value: whatsappMetrics.totals.messages_sent.toLocaleString() },
+        { label: "Delivered", value: whatsappMetrics.totals.messages_delivered.toLocaleString() },
+        { label: "Delivery Rate", value: `${whatsappMetrics.totals.delivery_rate.toFixed(1)}%` },
+        { label: "Response Rate", value: `${whatsappMetrics.totals.response_rate.toFixed(1)}%` },
+      ] : [
+        { label: "Messages Sent", value: "..." },
+        { label: "Delivered", value: "..." },
+        { label: "Delivery Rate", value: "..." },
+        { label: "Response Rate", value: "..." },
+      ],
+    },
+    {
+      category: "Operations",
+      stats: [
+        { label: "Human Handoffs", value: "23" },
+        { label: "SLA Compliance", value: "94.2%" },
+        { label: "Escalations", value: "12" },
+        { label: "Resolution Rate", value: "87%" },
+      ],
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -136,11 +225,11 @@ export default function Dashboard() {
                       {item.stage}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {item.count} ({item.percentage}%)
+                      {item.count} ({item.percentage.toFixed(1)}%)
                     </span>
                   </div>
-                  <Progress 
-                    value={item.percentage} 
+                  <Progress
+                    value={item.percentage}
                     className="h-3 rounded-full"
                   />
                 </motion.div>
